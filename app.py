@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import openai
 from datetime import datetime, timedelta
 import plotly.express as px
 import plotly.graph_objects as go
@@ -16,9 +15,55 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Initialize OpenAI (you would need to add your own API key)
-openai.api_key = "demo-mode"
-st.sidebar.success("✅ Running in demo mode with simulated AI analysis")
+# SIMULATED AI ANALYSIS FUNCTION (No OpenAI package needed!)
+def simulate_ai_analysis(transcript, interaction_type, agent_name):
+    """
+    This function simulates AI analysis without needing the OpenAI package
+    """
+    # Simulate different analysis based on content
+    transcript_lower = transcript.lower()
+    
+    if any(word in transcript_lower for word in ['frustrat', 'angry', 'upset', 'disappoint', 'unfair', 'complaint']):
+        sentiment = "Negative"
+        issues = ["Customer frustration not adequately addressed", "Empathy statements missing", "Opportunity to de-escalate was missed"]
+        strengths = ["Professional tone maintained", "Accurate information provided", "Good product knowledge"]
+        coaching_focus = "Practice empathy statements and de-escalation techniques"
+        example_phrase = "\"I understand why that would be frustrating. Let me see what I can do to help resolve this for you.\""
+        
+    elif any(word in transcript_lower for word in ['thank', 'appreciate', 'helpful', 'great', 'perfect', 'awesome']):
+        sentiment = "Positive"
+        issues = ["Opportunity to upsell missed", "Could have asked for feedback or review"]
+        strengths = ["Excellent customer service", "Strong problem resolution", "Positive customer feedback received"]
+        coaching_focus = "Upselling techniques and feedback collection"
+        example_phrase = "\"I'm so glad I could help! Would you be interested in our premium plan that prevents this issue in the future?\""
+        
+    else:
+        sentiment = "Neutral"
+        issues = ["Conversation could have been more engaging", "Missing opportunity to build rapport", "Proactive support could be improved"]
+        strengths = ["Efficient handling of inquiry", "All procedures followed correctly", "Good documentation of the issue"]
+        coaching_focus = "Building customer rapport and proactive engagement"
+        example_phrase = "\"Is there anything else I can help you with today? I'm here to assist!\""
+
+    # Generate realistic feedback
+    feedback = f"""
+**Agent:** {agent_name}
+**Interaction Type:** {interaction_type}
+**Overall Sentiment:** {sentiment}
+
+## 🎯 Strengths:
+{''.join([f'✅ {s}\\n' for s in strengths])}
+
+## 📋 Areas for Improvement:
+{''.join([f'⚠️ {i}\\n' for i in issues])}
+
+## 🎓 Recommended Coaching Focus:
+{coaching_focus}
+
+## 💡 Example Phrasing:
+{example_phrase}
+"""
+    
+    return feedback, sentiment, strengths, issues
 
 # Sample data for demonstration
 @st.cache_data
@@ -50,85 +95,6 @@ def load_sample_data():
         })
     
     return pd.DataFrame(agents), pd.DataFrame(interactions)
-
-# Function to analyze interaction using AI (simulated for demo)
-def analyze_interaction(transcript, interaction_type, agent_name):
-    if not openai.api_key or openai.api_key == "your-api-key-here":
-        # Simulated analysis for demo purposes
-        st.warning("Using simulated analysis. Add your OpenAI API key for real AI analysis.")
-        
-        # Simulate different analysis based on content
-        if any(word in transcript.lower() for word in ['frustrat', 'angry', 'upset', 'disappoint']):
-            sentiment = "Negative"
-            issues = ["Customer frustration not adequately addressed", "Empathy statements missing"]
-            strengths = ["Professional tone maintained", "Accurate information provided"]
-        elif any(word in transcript.lower() for word in ['thank', 'appreciate', 'helpful', 'great']):
-            sentiment = "Positive"
-            issues = ["Opportunity to upsell missed"]
-            strengths = ["Excellent customer service", "Strong problem resolution", "Positive customer feedback"]
-        else:
-            sentiment = "Neutral"
-            issues = ["Conversation could have been more engaging", "Missing opportunity to build rapport"]
-            strengths = ["Efficient handling of inquiry", "All procedures followed correctly"]
-        
-        # Generate simulated feedback
-        feedback = f"""
-        **Agent:** {agent_name}
-        **Interaction Type:** {interaction_type}
-        **Overall Sentiment:** {sentiment}
-        
-        **Strengths:**
-        {''.join([f'- {s}\\n' for s in strengths])}
-        
-        **Areas for Improvement:**
-        {''.join([f'- {i}\\n' for i in issues])}
-        
-        **Recommended Coaching Focus:**
-        - Practice empathy statements in difficult situations
-        - Work on identifying opportunities to add value
-        - Review product knowledge for upsell opportunities
-        
-        **Example phrasing for improvement:**
-        "I understand why that would be frustrating. Let me see what I can do to help resolve this for you."
-        """
-        
-        return feedback, sentiment, strengths, issues
-    
-    else:
-        # Real AI analysis with OpenAI
-        try:
-            prompt = f"""
-            Analyze this customer service {interaction_type} interaction and provide coaching feedback for the agent.
-            
-            Agent: {agent_name}
-            Interaction Type: {interaction_type}
-            Transcript: {transcript}
-            
-            Please provide:
-            1. Overall customer sentiment
-            2. Key strengths demonstrated by the agent
-            3. Areas for improvement with specific examples
-            4. Recommended coaching focus
-            5. Example phrasing for improvement
-            
-            Structure the response in a clear, professional manner suitable for a manager to use directly in coaching.
-            """
-            
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "You are an expert customer service coach specializing in providing constructive feedback to contact center agents."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.7,
-                max_tokens=1000
-            )
-            
-            return response.choices[0].message.content, "Unknown", [], []
-        
-        except Exception as e:
-            st.error(f"Error in AI analysis: {e}")
-            return "Analysis failed. Please check your API key and try again.", "Error", [], []
 
 # Main application
 def main():
@@ -216,7 +182,7 @@ def main():
         # Analyze button
         if st.button("Analyze Interaction", type="primary"):
             with st.spinner("Analyzing interaction with AI..."):
-                feedback, sentiment, strengths, issues = analyze_interaction(transcript, interaction_type, agent_name)
+                feedback, sentiment, strengths, issues = simulate_ai_analysis(transcript, interaction_type, agent_name)
             
             st.success("Analysis complete!")
             
@@ -225,7 +191,7 @@ def main():
             
             with tab1:
                 st.subheader("AI-Generated Feedback")
-                st.write(feedback)
+                st.markdown(feedback)
                 
                 # Quick actions
                 st.subheader("Next Steps")
